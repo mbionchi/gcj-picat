@@ -1,0 +1,114 @@
+% file:  watersheds.pi
+% author:  Mike Bionchik
+% date:  06/02/2015
+% problem link:  https://code.google.com/codejam/contest/90101/dashboard#s=p1
+
+main =>
+    T = read_int(stdin),            %% number of test cases.
+    I = 1,
+    while (I <= T)
+        H = read_int(stdin),        %% height
+        W = read_int(stdin),        %% width
+        
+        PtMap = new_map(H*W),       %% will hold all points:
+                                    %% $point(Y,X) -> int
+        SinkMap = new_map(),        %% will hols sinks only:
+                                    %% $point(Y,X) -> char
+        TestResult = new_array(H,W), % output buffer
+
+        foreach(Y in 1..H)          %% a loop to read in the altitude map
+            foreach(X in 1..W)      %% for this test case
+                Altitude = read_int(stdin),
+                PtMap.put($point(Y,X), Altitude)
+            end
+        end,
+
+        foreach(Y in 1..H)          %% the solution per se
+            foreach(X in 1..W)
+                P = $point(Y,X),
+                if PtMap.has_key(P) && integer(PtMap.get(P)) then
+                    C = flow(P, PtMap, SinkMap),
+                    TestResult[Y,X] = C
+                end
+            end
+        end,
+
+        print_result(I, TestResult, H, W),
+        
+        I := I+1                    %% onto the next test case!
+    end.
+
+
+%% print_result:  prints the resulting array in GCJ format
+
+print_result(Case, Array, H, W) =>
+    writef("Case #%w:%n", Case), flush(stdout),
+    foreach(Y in 1..H)
+        foreach(X in 1..W)
+            writef("%w ", Array[Y,X]), flush(stdout)
+        end,
+        writef("%n"), flush(stdout)
+    end.
+
+
+%% print_map:  print the contents of a map as K=V
+
+print_map(Map) =>
+    foreach(Key=Value in Map.map_to_list())
+        writef("%w=%w%n", Key, Value), flush(stdout)
+    end.
+
+
+%% flow:  return a basin (represented by a character a-z) that the specified
+%%        point Pt flows to.  If Pt is a sink, return the character associated
+%%        with the sink.
+
+flow(Pt, PtMap, SinkMap)=C =>
+
+    %% get adjacent points that are not a part of a basin, then compare the
+    %% current point to the adjacent points in the following way:
+    %%   * if all adjacent points have bigger altitude, then this point is a
+    %%     sink:
+    %%      - if this point is in the sink map:
+    %%          - return its value in the sink map
+    %%      - otherwise:
+    %%          - assign it a character
+    %%          - put the character into the sink map
+    %%          - return the character
+    %%   * if there is an adjacent point that we can `flow' to:
+    %%      - flow to this point
+    %%      - eventually we find a sink which returns a character
+    %%      - return the character
+
+    AdjacentPts = [P: P in adjacent(Pt), PtMap.has_key(P)],
+    FlowTo = Pt,
+    foreach (P in AdjacentPts)
+        if PtMap.get(FlowTo) > PtMap.get(P) then 
+            FlowTo := P
+        end
+    end,
+
+    if FlowTo == Pt then %we are the sink
+        if SinkMap.has_key(Pt) then
+            C = SinkMap.get(Pt)
+        else
+            if SinkMap.size() == 0 then     % can be replaced by a dirty-ish
+                C = a                       % hack by creating SinkMap with
+            else                            % new_map([$point(-1,-1)=96])
+                C = chr([ord(N): N in SinkMap.values()].max()+1)
+            end,
+            SinkMap.put(Pt, C)
+        end
+     else %we can flow somewhere
+        C = flow(FlowTo, PtMap, SinkMap)
+     end.
+ 
+
+%% adjacent:  return a list of points adjacent (differing only by 1 in either X
+%%            or Y) to the given point.  Imposes order: North West East South.
+
+adjacent(Point)=L =>
+    L = [new_struct(point, [Point[1]-1,Point[2]]),
+         new_struct(point, [Point[1],Point[2]-1]),
+         new_struct(point, [Point[1],Point[2]+1]),
+         new_struct(point, [Point[1]+1,Point[2]])].

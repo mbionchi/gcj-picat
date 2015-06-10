@@ -1,0 +1,36 @@
+% file:  min_scalar_product.pi
+% authors:  Mike Bionchik, Neng-Fa Zhou
+% date:  06/08/2015
+% problem link:  https://code.google.com/codejam/contest/32016/dashboard#s=p0
+
+% The intuition is as follows:  if we're to get the minimum scalar product, we
+% must multiply the largest numbers by the smallest numbers so that the sum of
+% products is minimized.  So it is sufficient to read in the vectors as ordered
+% lists (one is ascending, the other is descending) and compute their scalar
+% product.
+
+import util.
+
+main =>
+    T = read_int(stdin),
+    foreach (I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    N = read_int(stdin),
+    V1 = [],
+    V2 = [],
+
+    % read in first vector in ascending order
+    foreach (I in 1..N)
+        V1 := V1.insert_ordered(read_int(stdin))
+    end,
+
+    % read in second vector in descending order
+    foreach (I in 1..N)
+        V2 := V2.insert_ordered_down(read_int(stdin))
+    end,
+
+    % output the scalar product.
+    writef("Case #%w: %w%n", Case, sum([E1*E2 : {E1,E2} in zip(V1,V2)])).

@@ -1,0 +1,46 @@
+% file:  snapper_chain.pi
+% authors:  Mike Bionchik, Neng-Fa Zhou
+% date:  06/03/2015
+% problem link:  https://code.google.com/codejam/contest/433101/dashboard#s=p0
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    N = read_int(stdin),        % number of snapper devices
+    K = read_int(stdin),        % number of snaps
+
+    writef("Case #%w: %s%n", Case, cond(snapper(N,K),"ON","OFF")).
+
+snapper(N, K) => K mod 2**N == 2**N-1.
+
+% The idea behind this is as follows:  consider the table
+%
+%   N  1   2   3   4
+% K
+% 1   ON OFF OFF OFF
+% 2  OFF  ON OFF OFF
+% 3   ON  ON OFF OFF
+% 4  OFF OFF  ON OFF
+% 5   ON OFF  ON OFF
+% 6  OFF  ON  ON OFF
+% 7   ON  ON  ON OFF
+% 8  OFF OFF OFF  ON
+% 9   ON OFF OFF  ON
+% 10 OFF  ON OFF  ON
+% 11  ON  ON OFF  ON
+% 12 OFF OFF  ON  ON
+% 13  ON OFF  ON  ON
+% 14 OFF  ON  ON  ON
+% 15  ON  ON  ON  ON
+% 16 OFF OFF OFF OFF
+%
+% and observe that
+%   a) the ON and OFF states cycle each 2**N snaps, and
+%   b) Nth snapper is in its ON state iff its position in the cycle is between
+%      2**(N-1) and 2**N-1.
+%   c) Nth snapper has power iff it's in its last ON position in the cycle --
+%      that is, K mod 2**N == 2**N-1.

@@ -1,0 +1,48 @@
+% file:  filefixit.pi
+% authors:  Mike Bionchik, Neng-Fa Zhou
+% date:  06/03/2015
+% problem link:  https://code.google.com/codejam/contest/635101/dashboard#s=p0
+
+import util.
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    N = read_int(stdin),    % number of existing dirs
+    M = read_int(stdin),    % number of dirs to create
+
+    RootDir = new_map(),    % root directory tree:
+                            % string -> map(string -> map(...))
+
+    % build the initial directory tree
+    foreach(I in 1..N)
+        Dir = read_line(stdin),
+        _ = count_mkdirs(RootDir, split(Dir,"/"))  % use split to split a path
+    end,                                           % into subdirectories
+
+    % build the required tree and count the number of commands used
+    Mkdirs = 0,
+    foreach(I in 1..M)
+        Dir = read_line(stdin),
+        Mkdirs := Mkdirs+count_mkdirs(RootDir, split(Dir,"/"))
+    end,
+
+    writef("Case #%w: %w%n", Case, Mkdirs).
+
+
+%% count_mkdirs:  create a given directory (as well as directories in its path,
+%%                if needed) in the current directory tree and return number of
+%%                mkdir commands used
+
+count_mkdirs(Root, Dirs)=Count => mkdir_help(0, Root, Dirs, Count).
+
+mkdir_help(Acc, Parent, [], Count) => Count = Acc.
+mkdir_help(Acc, Parent, [Dir|Dirs], Count), not Parent.has_key(Dir) =>
+    Parent.put(Dir, new_map()),
+    mkdir_help(Acc+1, Parent.get(Dir), Dirs, Count).
+mkdir_help(Acc, Parent, [Dir|Dirs], Count) =>
+    mkdir_help(Acc, Parent.get(Dir), Dirs, Count).
