@@ -1,5 +1,5 @@
 % file:  rope_intranet.pi
-% authors:  Mike Bionchik
+% authors:  Mike Bionchik, Neng-Fa Zhou
 % date:  06/16/2015
 % problem link:  https://code.google.com/codejam/contest/619102/dashboard#s=p0
 
@@ -11,63 +11,12 @@ main =>
 
 do_case(Case) =>
     N = read_int(stdin),
-    M = new_map(N),
-    L = [],
-
-    foreach (I in 1..N)
-        A = read_int(stdin),
-        B = read_int(stdin),
-        M.put(A, B)
+    Wires = {(read_int(stdin),read_int(stdin)) : _I in 1..N},
+    Count = 0,
+    foreach (I in 1..len(Wires))
+        Count := Count + sum([intersect(Wires[I],Wires[J]) : J in I+1..len(Wires)])
     end,
+    writef("Case #%w: %w%n", Case, Count).
 
-    foreach (K in M.keys().sort())
-        L := L ++ [M.get(K)]
-    end,
-
-    % use merge sort to count the number of intersections
-    writef("Case #%w: %w%n", Case, merge_sort_count(L)).
-
-merge_sort_count(List)=IntersectionCount =>
-    IntersectionCount = imerge_sort_help(List,1,List.length()).
-
-imerge_sort_help(_, Li, Ri)=IntersectionCount, Ri-Li == 0 =>
-    IntersectionCount = 0.
-
-imerge_sort_help(List, Li, Ri)=IntersectionCount =>
-    LeftCount = imerge_sort_help(List, Li, (Li+Ri) div 2),
-    RightCount = imerge_sort_help(List, (Li+Ri) div 2 + 1, Ri),
-    IntersectionCount = LeftCount + RightCount + imerge_help(List, Li, Ri).
-
-imerge_help(List, Li, Ri)=IntersectionCount =>
-    TmpList = new_list(Ri-Li+1),
-    Mid = (Li+Ri) div 2,
-    IntersectionCount = 0,
-    IntersectionSkip = 0,
-    I = Li,
-    J = Mid+1,
-    K = 1,
-    while (I <= Mid && J <= Ri)
-        if List[I] < List[J] then
-            TmpList[K] = List[I],
-            I := I+1
-        else
-            TmpList[K] = List[J],
-            IntersectionCount := IntersectionCount + J - I - IntersectionSkip,
-            IntersectionSkip := IntersectionSkip + 1,
-            J := J+1
-        end,
-        K := K+1
-    end,
-    while (I <= Mid)
-        TmpList[K] = List[I],
-        I := I+1,
-        K := K+1
-    end,
-    while (J <= Ri)
-        TmpList[K] = List[J],
-        J := J+1,
-        K := K+1
-    end,
-    foreach (Z in Li..Ri)
-        List[Z] := TmpList[Z-Li+1]
-    end.
+intersect((L1,R1),(L2,R2)) = 1, (L1>L2 && R1<R2 || L1<L2 && R1>R2) => true.
+intersect(_,_) = 0.
