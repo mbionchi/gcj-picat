@@ -1,0 +1,65 @@
+% file:  haircut.pi
+% author:  Mike Bionchik
+% date: 06/15/2015
+% problem link:  https://code.google.com/codejam/contest/4224486/dashboard#s=p1
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    B = read_int(stdin),        % number of barbers
+    N = read_int(stdin),        % our place in line
+    M = new_list(B),            % list of minutes
+
+    foreach(X in M)
+        X = read_int(stdin)
+    end,
+
+    writef("Case #%w: %w%n", Case, get_barber(M,N)).
+
+
+% get_barber():  returns the barber that will serve the Nth customer.  The value
+%                is computed by first finding what time Nth customer will be
+%                served, then looking at how many people will be served at that
+%                time simultaneously, and then finding the barber that will be
+%                available at that time to serve the Nth customer.
+
+get_barber(M, N)=B =>
+    T = search(M, N),
+    C = N - served_people_count(M, T-1),
+    B = get_barber_help(M, T, C, 0).
+
+get_barber_help(_, _, 0, Barber)=B =>
+    B = Barber.
+
+get_barber_help([M|Ms], T, C, Barber)=B, T mod M == 0 =>
+    B = get_barber_help(Ms, T, C-1, Barber+1).
+
+get_barber_help([M|Ms], T, C, Barber)=B =>
+    B = get_barber_help(Ms, T, C, Barber+1).
+
+
+% search():  returns time T such that at time T, exactly N customers have been
+%            served.  Uses binary search to find the value of T by evaluating
+%            function served_people_count().
+
+search(M, N)=T =>
+    T = bsearch(M, -1, M.max() * N, N).
+
+bsearch(M, Lo, Hi, N)=T, Hi-Lo == 1 =>
+    T = Hi.
+
+bsearch(M, Lo, Hi, N)=T, served_people_count(M,(Lo+Hi) div 2) >= N =>
+    T = bsearch(M, Lo, (Lo+Hi) div 2, N).
+
+bsearch(M, Lo, Hi, N)=T, served_people_count(M,(Lo+Hi) div 2) < N =>
+    T = bsearch(M, (Lo+Hi) div 2, Hi, N).
+
+
+% served_people_count():  returns number of people that have been served by a
+%                         barber up to time T.
+
+served_people_count(M, T)=P => P = [T div X + 1 : X in M].sum().

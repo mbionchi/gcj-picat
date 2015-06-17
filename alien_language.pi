@@ -1,0 +1,67 @@
+% file:  alien_language.pi
+% author:  Mike Bionchik, Neng-Fa Zhou
+% date:  06/15/2015
+% problem link:  https://code.google.com/codejam/contest/90101/dashboard#s=p0&a=1
+
+main =>
+    _ = read_int(stdin),    % word length -- don't care
+    D = read_int(stdin),    % known words
+    N = read_int(stdin),    % number of test cases (i.e. patterns)
+    Words = new_list(D),
+
+    foreach(I in 1..D)
+        Words[I] = read_line(stdin)
+    end,
+
+    foreach(I in 1..N)
+        do_case(I, Words)
+    end.
+
+
+do_case(Case, Words) =>
+    P = build_pattern(read_line(stdin)),
+    writef("Case #%w: %w%n", Case, [A : A in Words, try_pattern(A, P)].length()).
+
+
+%% try_pattern(A, P):  return yes if string A matches with the pattern P,
+%%                     no otherwise.
+
+try_pattern([], []) => true.
+
+try_pattern([A|As], [A|Ps]) =>
+    try_pattern(As, Ps).
+
+try_pattern([A|As], [L|Ps]), member(A,L) =>
+    try_pattern(As, Ps).
+
+
+%% build_pattern(S):  converts the pattern of form (abc)def(gh)ij to 
+%%                    [[a,b,c],d,e,f,[g,h],i,j]
+
+build_pattern(S)=P => build_pattern_help(S, [], [], P).
+
+build_pattern_help([], [], Pattern, P) => P = Pattern.
+
+build_pattern_help([H|T], '(', Pattern, P) =>
+    build_pattern_help(T, [H], Pattern, P).
+
+build_pattern_help(['('|T], [], Pattern, P) =>
+    build_pattern_help(T, '(', Pattern, P).
+
+build_pattern_help([')'|T], Subpattern, Pattern, P) =>
+    cp_list(Pattern, L, [Subpattern]),
+    build_pattern_help(T, [], L, P).
+
+build_pattern_help([H|T], [], Pattern, P) =>
+    cp_list(Pattern, L, [H]),
+    build_pattern_help(T, [], L, P).
+
+build_pattern_help([H|T], Subpattern, Pattern, P) =>
+    cp_list(Subpattern, L, [H]),
+    build_pattern_help(T, L, Pattern, P).
+
+
+cp_list([], L, Lr) => L = Lr.
+cp_list([H|T], L, Lr) =>
+    L = [H|L1],
+    cp_list(T,L1,Lr).
