@@ -1,0 +1,52 @@
+% file:  data_packing.pi
+% author:  Mike Bionchik
+% date:  06/23/2015
+% problem link:  https://code.google.com/codejam/contest/3014486/dashboard#s=p0
+
+import cp.
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    N = read_int(stdin),
+    X = read_int(stdin),
+    S = new_map(),
+
+    % read the file sizes into a map to account for duplicates
+    foreach (_ in 1..N)
+        Size = read_int(stdin),
+        if S.has_key(Size) then
+            S.put(Size, S.get(Size)+1)
+        else
+            S.put(Size, 1)
+        end
+    end,
+
+    S.put(0, -1),   % 0 has a special meaning - we have `infinite' files with
+                    % size 0 for convenience
+
+    % count pairs that will take maximum allowed space
+    PairCount = 0,
+    while (find_max_pair(S, X, A, B))
+        PairCount := PairCount + 1,
+        S.put(A, S.get(A)-1),
+        S.put(B, S.get(B)-1)
+    end,
+
+    writef("Case #%w: %w%n", Case, PairCount).
+
+find_max_pair(S, X, A, B) =>
+    Vars = [A,B],
+    AllFileSizes = [V : V in S.keys(), S.get(V) > 0],
+    AllFileSizes != [],
+    DupFileSizes = [V : V in S.keys(), S.get(V) > 1],
+    A :: [0|AllFileSizes].sort(),
+    B :: AllFileSizes.sort_down(),
+    A #= B #=> B :: DupFileSizes, % if File A = File B, then there must be a 
+                                  % duplicate
+    A + B #<= X,
+    solve([$max(A+B), rand], Vars).

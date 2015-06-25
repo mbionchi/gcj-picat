@@ -1,0 +1,30 @@
+% file:  store_credit.pi
+% author:  Mike Bionchik
+% date: 06/22/2015
+% problem link:  http://code.google.com/codejam/contest/351101/dashboard#s=p0
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    C = read_int(stdin),
+    I = read_int(stdin),
+    P = new_list(I),
+    foreach(X in P)
+        X = read_int(stdin)
+    end,
+    go(C, 1..I, P, A, B),
+    writef("Case #%w: %w %w%n", Case, A, B);
+    writef("Case #%w: Impossible%n", Case).
+
+go(C, [I|[J|_]], P, A, B), P[I] + P[J] == C ?=>
+    A = I, B = J.
+
+go(C, [I], P, A, B) =>
+    go(C, I+1..P.length(), P, A, B).
+
+go(C, [I|[_|K]], P, A, B) =>
+    go(C, [I|K], P, A, B).

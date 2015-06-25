@@ -1,0 +1,32 @@
+% file:  all_your_base.pi
+% author:  Mike Bionchik
+% date: 06/22/2015
+% problem link:  http://code.google.com/codejam/contest/189252/dashboard#s=p0
+
+% Intuition for this problem is similar to the minimum scalar product problem:
+% in order to minimize the equation A*Base**N+B*Base**(N-1)...Z*Base**0 we'd
+% have to make sure that A < B < ... < Z, so we simply map the old values to the
+% new values in the following order: 1,0,2,3..Base and calculate the result.
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+
+do_case(Case) =>
+    L = read_line(stdin),
+    Uniq = L.remove_dups(),
+    NumMap = new_map([K=V : {K,V} in zip(Uniq, [1|[0|2..Uniq.length()]])]),
+    Result = compute_min(NumMap, L, max(2,Uniq.length())),
+    writef("Case #%w: %w%n", Case, Result).
+
+
+compute_min(M, [H|T], Base)=R =>
+    compute_min_help(T.length()-1, T, Base, M, 1*Base**T.length(), R).
+
+compute_min_help(Pos, [H|T], Base, NumMap, Acc, Result) =>
+    compute_min_help(Pos-1, T, Base, NumMap, Acc+NumMap.get(H)*Base**Pos, Result).
+
+compute_min_help(_, [], _, _, Acc, Result) => Result = Acc.
