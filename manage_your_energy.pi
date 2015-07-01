@@ -1,0 +1,61 @@
+% file:  manage_your_energy.pi
+% author:  Mike Bionchik
+% date:  06/30/2015
+% problem link:  https://code.google.com/codejam/contest/2418487/dashboard#s=p1
+
+import util.
+
+% the idea is as follows:
+%  * we begin with maximum possible energy and ending energy 0 (since we can
+%    spend all of it)
+%  * we look for the most important task and assign it the maximum energy (M) we
+%    can spend, which is characterized as follows:
+%      . M >= 0
+%      . M <= E
+%      . M <= energy at the beginning plus how much we will have regained once
+%             we get to this task
+%      . energy at the end of this array must be <= than the ending energy
+%        (since we may want to spend more later)
+%  * once we assign this value to the most important task, we recursively apply
+%    the same algorithm to the left and right sides of the array, updating the
+%    starting energy and ending energy for each one of them.
+
+main =>
+    T = read_int(stdin),
+    foreach(I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    E = read_int(stdin),
+    R = read_int(stdin),
+    N = read_int(stdin),
+    V = new_array(N),
+    foreach (X in V)
+        X = read_int(stdin)
+    end,
+    writef("Case #%w: %w%n", Case, find_max_gain(E, R, V)).
+
+
+find_max_gain(E, R, V)=G, E == R =>
+    G = sum([A*E : A in V]).
+
+find_max_gain(E, R, V)=G =>
+    L = new_array(V.length()),
+    find_max_gain_help(E, R, V, E, 0, 1, V.length(), L),
+    G = sum([A*B : {A,B} in zip(V.to_list(),L.to_list())]).
+
+find_max_gain_help(E, R, V, X, Z, From, To, L), From - To = 1 => true.
+
+find_max_gain_help(E, R, V, X, Z, From, To, L) =>
+    Max = max([V[I] : I in From..To]),
+    MaxIndex = [I : I in From..To, V[I] = Max].first(),
+    L[MaxIndex] = max(0, min([E, X+(MaxIndex-From)*R, min(E, X+(MaxIndex-From)*R)+(To-MaxIndex+1)*R-Z])),
+    find_max_gain_help(E, R, V,
+        X,
+        min(E,max(0,Z - (To-MaxIndex)*R) + L[MaxIndex]),
+        From, MaxIndex-1, L),
+    find_max_gain_help(E, R, V,
+        min(E, X+(MaxIndex-From)*R)-L[MaxIndex]+R,
+        Z,
+        MaxIndex+1, To, L).

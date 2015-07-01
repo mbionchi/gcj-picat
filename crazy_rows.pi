@@ -1,0 +1,51 @@
+% file:  crazy_rows.pi
+% authors:  Mike Bionchik, Neng-Fa Zhou
+% date:  06/29/2015
+% problem link:  https://code.google.com/codejam/contest/204113/dashboard#s=p0
+
+import util, planner.
+
+main =>
+    T = read_int(stdin),
+    foreach (I in 1..T)
+        do_case(I)
+    end.
+
+do_case(Case) =>
+    N = read_int(stdin),
+    L = new_list(N),
+    foreach (E in L)
+        X = read_line(stdin).find_last_of('1'),
+        E = cond(X<1,0,X)
+    end,
+    best_plan(L, Plan, PlanLen),
+    writef("Case #%w: %w%n", Case, PlanLen).
+
+final(L) =>
+    check_final(1,L).
+
+check_final(_,[]) => true.
+check_final(I,[E|L]) =>
+    E <= I,
+    check_final(I+1,L).
+
+action(L, NL, Action, Cost) =>
+    Action = I,
+    Cost = 1,
+    between(1,L.length()-1,I),
+    swap_rows(L,1,I,NL),
+    current_resource() > estimated_num_swaps(NL,1).
+
+swap_rows([R1,R2|L],I,I,NL) => R1 > R2, NL = [R2,R1|L].
+swap_rows([R|L],Count,I,NL) => 
+    NL = [R|NLR],
+    swap_rows(L,Count+1,I,NLR).
+
+% count rows that have 1s above the main diagonal
+estimated_num_swaps(L,I) = Count =>
+    estimated_num_swaps(L,I,0,Count).
+
+estimated_num_swaps([],_I,Count0,Count) => Count=Count0.
+estimated_num_swaps([E|L],I,Count0,Count) =>
+    Count1 = cond(E>I,E-I,0) + Count0,
+    estimated_num_swaps(L,I+1,Count1,Count).
